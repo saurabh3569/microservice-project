@@ -10,6 +10,11 @@ This document outlines the current setup and progress of the microservices-based
 
 - **Port:** `3001`
 - **MONGO_URI:** `mongodb://localhost:27017/userdb`
+- **.env:**
+  ```env
+  PORT=3001
+  MONGO_URI=mongodb://localhost:27017/userdb
+  ```
 - **Endpoints:**
   - `POST /users` - Create user
   - `GET /users` - List users
@@ -20,6 +25,11 @@ This document outlines the current setup and progress of the microservices-based
 
 - **Port:** `3002`
 - **MONGO_URI:** `mongodb://localhost:27017/productdb`
+- **.env:**
+  ```env
+  PORT=3002
+  MONGO_URI=mongodb://localhost:27017/productdb
+  ```
 - **Endpoints:**
   - `POST /products` - Create product
   - `GET /products` - List products with creator info (via fetch approach)
@@ -30,6 +40,12 @@ This document outlines the current setup and progress of the microservices-based
 
 - **Port:** `8000`
 - **Tech:** Express + `http-proxy-middleware`
+- **.env:**
+  ```env
+  PORT=8000
+  USER_SERVICE_URL=http://localhost:3001/users
+  PRODUCT_SERVICE_URL=http://localhost:3002/products
+  ```
 - **Proxies:**
   - `/users` → `http://localhost:3001/users`
   - `/products` → `http://localhost:3002/products`
