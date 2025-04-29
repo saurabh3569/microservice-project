@@ -3,6 +3,13 @@ const axios = require("axios");
 
 const createProduct = async (req, res) => {
   try {
+    const user = await axios
+      .get(`http://localhost:8000/users/${product.createdBy}`)
+      .then((res) => res.data);
+
+    if (!user) {
+      return res.status(404).json({ message: "user not found" });
+    }
     const newProduct = await Product.create(req.body);
     res.json(newProduct);
   } catch (err) {
@@ -14,23 +21,30 @@ const listProduct = async (req, res) => {
   try {
     const products = await Product.find();
 
-    const enrichedProducts = await Promise.all(
-      products.map(async (product) => {
-        const response = await axios.get(
-          `http://localhost:3001/users/${product.createdBy}`
-        );
-        const user = response.data ?? { userName: null, userEmail: null };
+    const users = await axios
+      .get(`http://localhost:8000/users`)
+      .then((res) => res.data);
 
-        return {
-          _id: product._id,
-          name: product.name,
-          price: product.price,
-          createdBy: product.createdBy,
-          userName: user.name,
-          userEmail: user.email,
-        };
-      })
-    );
+    const userGrouped = {};
+
+    for (const user of users) {
+      userGrouped[user._id.toString()] = user;
+    }
+
+    const enrichedProducts = [];
+
+    for (const product of products) {
+      const user = userGrouped[product.createdBy.toString()];
+
+      enrichedProducts.push({
+        _id: product._id,
+        name: product.name,
+        price: product.price,
+        createdBy: product.createdBy,
+        userName: user.name,
+        userEmail: user.email,
+      });
+    }
 
     res.json(enrichedProducts);
   } catch (err) {
@@ -42,13 +56,17 @@ const getProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
 
-    const response = await axios.get(
-      `http://localhost:3001/users/${product.createdBy}`
-    );
-    const user = response.data ?? { userName: null, userEmail: null };
+    if (!product) {
+      return res.status(404).json({ message: "product not found" });
+    }
 
-    product.userName = user.name;
-    product.userEmail = user.email;
+    const user = await axios
+      .get(`http://localhost:8000/users/${product.createdBy}`)
+      .then((res) => res.data);
+
+    if (!user) {
+      return res.status(404).json({ message: "user not found" });
+    }
 
     res.json({
       _id: product._id,
